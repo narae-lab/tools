@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>YS 멘트 생성기</title>
+<style>
+  :root {
+    --bg: #f7f8fa;
+    --surface: #ffffff;
+    --border: #e4e7ec;
+    --text: #1a1d23;
+    --sub: #6b7280;
+    --accent: #3b5bdb;
+    --accent-light: #eef2ff;
+    --success: #2f9e44;
+    --success-light: #ebfbee;
+    --tab-active: #1a1d23;
+    --radius: 12px;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    box-sizing: border-box;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 20px 0;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+
+  .header-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 12px;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 0;
+  }
+
+  .tab-btn {
+    flex: 1;
+    padding: 10px 0;
+    border: none;
+    background: transparent;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--sub);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+  }
+
+  .tab-btn.active {
+    color: var(--tab-active);
+    border-bottom-color: var(--tab-active);
+  }
+
+  .tab-content {
+    display: none;
+    padding: 20px 16px;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  .tab-content.active { display: block; }
+
+  /* 섹션 */
+  .section {
+    margin-bottom: 20px;
+  }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--sub);
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+
+  /* 시간 입력 */
+  .time-input-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .time-input-wrap input {
+    border: none;
+    outline: none;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    width: 80px;
+    font-family: inherit;
+  }
+
+  .time-input-wrap span {
+    font-size: 14px;
+    color: var(--sub);
+  }
+
+  /* 체크 리스트 */
+  .checklist {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .check-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.1s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .check-item:last-child { border-bottom: none; }
+  .check-item:active { background: var(--bg); }
+
+  .check-item.checked .item-label {
+    color: var(--sub);
+    text-decoration: line-through;
+  }
+
+  .check-item.checked .checkbox {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .check-item.checked .checkbox::after { opacity: 1; }
+
+  .checkbox {
+    width: 20px;
+    height: 20px;
+    border: 1.5px solid #d1d5db;
+    border-radius: 5px;
+    flex-shrink: 0;
+    position: relative;
+    transition: all 0.15s;
+  }
+
+  .checkbox::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 6px;
+    width: 5px;
+    height: 9px;
+    border: 2px solid white;
+    border-top: none;
+    border-left: none;
+    transform: rotate(45deg);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+
+  .item-label {
+    font-size: 14px;
+    color: var(--text);
+    flex: 1;
+    transition: all 0.15s;
+  }
+
+  /* 미리보기 */
+  .preview-box {
+    background: #f0f2f5;
+    border-radius: var(--radius);
+    padding: 14px;
+    font-size: 13px;
+    line-height: 1.8;
+    color: var(--text);
+    white-space: pre-wrap;
+    word-break: break-all;
+    min-height: 80px;
+    border: 1px solid var(--border);
+  }
+
+  .preview-empty {
+    color: var(--sub);
+    font-style: normal;
+  }
+
+  /* 복사 버튼 */
+  .copy-btn {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    border-radius: var(--radius);
+    border: none;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+    margin-top: 8px;
+  }
+
+  .copy-btn.primary {
+    background: var(--accent);
+    color: white;
+  }
+
+  .copy-btn.primary:active { background: #2f4dbf; }
+
+  .copy-btn.secondary {
+    background: var(--surface);
+    color: var(--accent);
+    border: 1.5px solid var(--accent);
+  }
+
+  .copy-btn.secondary:active { background: var(--accent-light); }
+
+  .copy-btn.done {
+    background: var(--success-light);
+    color: var(--success);
+    border-color: var(--success);
+  }
+
+  /* 텍스트 입력 */
+  .text-input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--text);
+    background: var(--surface);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .text-input:focus { border-color: var(--accent); }
+
+  .input-row {
+    display: flex;
+    gap: 8px;
+  }
+
+  .input-row .text-input { flex: 1; }
+
+  /* 구분선 */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 24px 0;
+  }
+
+  .section-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 10px;
+  }
+
+  /* 전체 선택 */
+  .select-all-btn {
+    display: block;
+    width: 100%;
+    padding: 10px 14px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--sub);
+    cursor: pointer;
+    margin-bottom: 8px;
+    font-family: inherit;
+    text-align: left;
+    transition: background 0.1s;
+  }
+
+  .select-all-btn:active { background: var(--border); }
+
+  /* 항목 삭제 버튼 */
+  .delete-item-btn {
+    width: 24px;
+    height: 24px;
+    border: none;
+    background: transparent;
+    color: #d1d5db;
+    font-size: 16px;
+    cursor: pointer;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.15s;
+    padding: 0;
+    line-height: 1;
+  }
+
+  .delete-item-btn:hover { color: #ef4444; background: #fef2f2; }
+
+  /* 항목 추가 영역 */
+  .add-item-wrap {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .add-item-input {
+    flex: 1;
+    padding: 10px 12px;
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--text);
+    background: var(--surface);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .add-item-input:focus { border-color: var(--accent); border-style: solid; }
+
+  .add-item-btn {
+    padding: 10px 14px;
+    background: var(--accent-light);
+    color: var(--accent);
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    white-space: nowrap;
+    transition: background 0.15s;
+  }
+
+  .add-item-btn:active { background: #dbe4ff; }
+
+  /* 결제 카드 */
+  .payment-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    margin-bottom: 8px;
+  }
+
+  .payment-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  .payment-row:last-child { margin-bottom: 0; }
+
+  .payment-input {
+    flex: 1;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--text);
+    background: var(--bg);
+    outline: none;
+    min-width: 0;
+  }
+
+  .payment-input:focus { border-color: var(--accent); background: var(--surface); }
+
+  .qty-wrap {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 4px 8px;
+  }
+
+  .qty-btn {
+    width: 22px;
+    height: 22px;
+    border: none;
+    background: var(--border);
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text);
+    flex-shrink: 0;
+  }
+
+  .qty-num {
+    font-size: 13px;
+    font-weight: 700;
+    min-width: 16px;
+    text-align: center;
+    color: var(--text);
+  }
+
+  .payment-label {
+    font-size: 11px;
+    color: var(--sub);
+    margin-bottom: 4px;
+  }
+
+  .payment-del-btn {
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    color: #d1d5db;
+    font-size: 18px;
+    cursor: pointer;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+
+  .payment-del-btn:hover { color: #ef4444; background: #fef2f2; }
+
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-title">YS 멘트 생성기</div>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('middle', this)">중간 멘트</button>
+    <button class="tab-btn" onclick="switchTab('end', this)">퇴근 멘트</button>
+  </div>
+</header>
+
+<!-- ===== 중간 보고 탭 ===== -->
+<div id="tab-middle" class="tab-content active">
+
+  <div class="section">
+    <div class="section-label">완료 항목 체크</div>
+    <button class="select-all-btn" onclick="toggleAll()">전체 선택 / 해제</button>
+    <div class="checklist" id="middle-checklist">
+      <div class="check-item">
+        <div class="checkbox" onclick="toggleCheck(this.parentElement)"></div>
+        <div class="item-label" onclick="toggleCheck(this.parentElement)">정수기 닦기</div>
+        <button class="delete-item-btn" onclick="deleteItem(this)">×</button>
+      </div>
+      <div class="check-item">
+        <div class="checkbox" onclick="toggleCheck(this.parentElement)"></div>
+        <div class="item-label" onclick="toggleCheck(this.parentElement)">제빙기 닦기</div>
+        <button class="delete-item-btn" onclick="deleteItem(this)">×</button>
+      </div>
+      <div class="check-item">
+        <div class="checkbox" onclick="toggleCheck(this.parentElement)"></div>
+        <div class="item-label" onclick="toggleCheck(this.parentElement)">인포데스크 책상 닦기</div>
+        <button class="delete-item-btn" onclick="deleteItem(this)">×</button>
+      </div>
+      <div class="check-item">
+        <div class="checkbox" onclick="toggleCheck(this.parentElement)"></div>
+        <div class="item-label" onclick="toggleCheck(this.parentElement)">인포, 공용테이블 닦기</div>
+        <button class="delete-item-btn" onclick="deleteItem(this)">×</button>
+      </div>
+      <div class="check-item">
+        <div class="checkbox" onclick="toggleCheck(this.parentElement)"></div>
+        <div class="item-label" onclick="toggleCheck(this.parentElement)">인포 전체 청소기</div>
+        <button class="delete-item-btn" onclick="deleteItem(this)">×</button>
+      </div>
+      <div class="check-item">
+        <div class="checkbox" onclick="toggleCheck(this.parentElement)"></div>
+        <div class="item-label" onclick="toggleCheck(this.parentElement)">인포 전체 물걸레질</div>
+        <button class="delete-item-btn" onclick="deleteItem(this)">×</button>
+      </div>
+      <div class="check-item">
+        <div class="checkbox" onclick="toggleCheck(this.parentElement)"></div>
+        <div class="item-label" onclick="toggleCheck(this.parentElement)">여탈 복도 청소기</div>
+        <button class="delete-item-btn" onclick="deleteItem(this)">×</button>
+      </div>
+      <div class="check-item">
+        <div class="checkbox" onclick="toggleCheck(this.parentElement)"></div>
+        <div class="item-label" onclick="toggleCheck(this.parentElement)">여자탈의실 선반 정리 및 닦기</div>
+        <button class="delete-item-btn" onclick="deleteItem(this)">×</button>
+      </div>
+      <div class="check-item">
+        <div class="checkbox" onclick="toggleCheck(this.parentElement)"></div>
+        <div class="item-label" onclick="toggleCheck(this.parentElement)">세면대 닦기</div>
+        <button class="delete-item-btn" onclick="deleteItem(this)">×</button>
+      </div>
+      <div class="check-item">
+        <div class="checkbox" onclick="toggleCheck(this.parentElement)"></div>
+        <div class="item-label" onclick="toggleCheck(this.parentElement)">여탈 바닥 머리카락 청소</div>
+        <button class="delete-item-btn" onclick="deleteItem(this)">×</button>
+      </div>
+      <div class="check-item">
+        <div class="checkbox" onclick="toggleCheck(this.parentElement)"></div>
+        <div class="item-label" onclick="toggleCheck(this.parentElement)">포대 재정리</div>
+        <button class="delete-item-btn" onclick="deleteItem(this)">×</button>
+      </div>
+      <div class="check-item">
+        <div class="checkbox" onclick="toggleCheck(this.parentElement)"></div>
+        <div class="item-label" onclick="toggleCheck(this.parentElement)">쓰레기통 닦기</div>
+        <button class="delete-item-btn" onclick="deleteItem(this)">×</button>
+      </div>
+    </div>
+    <div class="add-item-wrap">
+      <input type="text" class="add-item-input" id="new-item-input" placeholder="항목 추가..." onkeydown="if(event.key==='Enter') addItem()" />
+      <button class="add-item-btn" onclick="addItem()">+ 추가</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">미리보기</div>
+    <div class="preview-box" id="middle-preview"><span class="preview-empty">항목을 체크하면 여기에 멘트가 생성됩니다.</span></div>
+  </div>
+
+  <button class="copy-btn primary" id="copy-middle" onclick="copyText('middle-preview', 'copy-middle')">복사하기</button>
+  <button class="select-all-btn" style="margin-top:12px; text-align:center;" onclick="resetMiddle()">↺ 초기화</button>
+
+</div>
+
+<!-- ===== 퇴근 멘트 탭 ===== -->
+<div id="tab-end" class="tab-content">
+
+  <div class="section">
+    <div class="section-label">청소 완료 멘트 (수정 가능)</div>
+    <textarea class="text-input" id="cleaning-ment" rows="3" style="resize:vertical; line-height:1.6;" oninput="updateEndPreview()">5층 청소, 4층 남녀 탈의실 및 샤워실 전체 청소, 각 탈의실 쓰레기통 교체 완료하였습니다.</textarea>
+  </div>
+
+  <div class="section">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+      <div class="section-label" style="margin-bottom:0;">결제 내역</div>
+      <button id="no-sales-btn" onclick="toggleNoSales()" style="font-size:11px; font-weight:600; padding:4px 10px; border-radius:99px; border:1.5px solid var(--border); background:var(--surface); color:var(--sub); cursor:pointer; transition:all 0.15s;">없음</button>
+    </div>
+    <div id="payment-list"></div>
+    <button id="add-payment-btn" class="add-item-btn" style="width:100%; margin-top:8px; padding:12px;" onclick="addPayment()">+ 결제 건 추가</button>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="section">
+    <div class="section-title">📢 단톡방 (YS방)</div>
+    <div class="preview-box" id="end-preview-group"><span class="preview-empty">결제 내역을 추가하면 멘트가 생성됩니다.</span></div>
+    <button class="copy-btn primary" id="copy-end-group" onclick="copyText('end-preview-group', 'copy-end-group')" style="margin-top:8px;">단톡방 복사</button>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="section">
+    <div class="section-title">💬 인포 별도 단톡</div>
+    <div class="preview-box" id="end-preview-info"><span class="preview-empty">결제 내역을 추가하면 멘트가 생성됩니다.</span></div>
+    <button class="copy-btn secondary" id="copy-end-info" onclick="copyText('end-preview-info', 'copy-end-info')" style="margin-top:8px;">인포 단톡 복사</button>
+  </div>
+
+  <button class="select-all-btn" style="margin-top:4px; text-align:center;" onclick="resetEnd()">↺ 초기화</button>
+
+</div>
+
+<script>
+  function switchTab(name, btn) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  function toggleCheck(el) {
+    el.classList.toggle('checked');
+    updateMiddlePreview();
+  }
+
+  function deleteItem(btn) {
+    btn.closest('.check-item').remove();
+    updateMiddlePreview();
+  }
+
+  function addItem() {
+    const input = document.getElementById('new-item-input');
+    const text = input.value.trim();
+    if (!text) return;
+
+    const checklist = document.getElementById('middle-checklist');
+    const item = document.createElement('div');
+    item.className = 'check-item';
+    item.innerHTML = `
+      <div class="checkbox" onclick="toggleCheck(this.parentElement)"></div>
+      <div class="item-label" onclick="toggleCheck(this.parentElement)">${text}</div>
+      <button class="delete-item-btn" onclick="deleteItem(this)">×</button>
+    `;
+    checklist.appendChild(item);
+    input.value = '';
+    updateMiddlePreview();
+    input.focus();
+  }
+
+  function toggleAll() {
+    const items = document.querySelectorAll('#middle-checklist .check-item');
+    const allChecked = [...items].every(i => i.classList.contains('checked'));
+    items.forEach(i => {
+      if (allChecked) i.classList.remove('checked');
+      else i.classList.add('checked');
+    });
+    updateMiddlePreview();
+  }
+
+  function updateMiddlePreview() {
+    const checked = [...document.querySelectorAll('#middle-checklist .check-item.checked')]
+      .map(i => i.querySelector('.item-label').textContent.trim());
+
+    const preview = document.getElementById('middle-preview');
+
+    if (checked.length === 0) {
+      preview.innerHTML = '<span class="preview-empty">항목을 체크하면 여기에 멘트가 생성됩니다.</span>';
+      return;
+    }
+
+    let text = '';
+    checked.forEach(item => { text += '- ' + item + '\n'; });
+    text += '완료했습니다.';
+
+    preview.textContent = text;
+  }
+
+  let paymentId = 0;
+
+  function addPayment() {
+    const id = paymentId++;
+    const list = document.getElementById('payment-list');
+    const card = document.createElement('div');
+    card.className = 'payment-card';
+    card.dataset.id = id;
+    card.innerHTML = `
+      <div class="payment-row">
+        <div style="flex:1">
+          <div class="payment-label">항목명</div>
+          <input class="payment-input" type="text" placeholder="예: F-6 이벤트, 일일입장" oninput="updateEndPreview()" />
+        </div>
+        <div style="flex:1">
+          <div class="payment-label">결제수단</div>
+          <input class="payment-input" type="text" placeholder="카드, 계좌이체, 현금" oninput="updateEndPreview()" />
+        </div>
+        <button class="payment-del-btn" onclick="removePayment(this)">×</button>
+      </div>
+      <div class="payment-row">
+        <div style="flex:1">
+          <div class="payment-label">금액 (원)</div>
+          <input class="payment-input" type="number" placeholder="예: 130000" oninput="updateEndPreview()" />
+        </div>
+        <div>
+          <div class="payment-label">수량</div>
+          <div class="qty-wrap">
+            <button class="qty-btn" onclick="changeQty(this, -1)">−</button>
+            <span class="qty-num">1</span>
+            <button class="qty-btn" onclick="changeQty(this, 1)">+</button>
+          </div>
+        </div>
+      </div>
+    `;
+    list.appendChild(card);
+    updateEndPreview();
+  }
+
+  function removePayment(btn) {
+    btn.closest('.payment-card').remove();
+    updateEndPreview();
+  }
+
+  function changeQty(btn, delta) {
+    const qtyEl = btn.parentElement.querySelector('.qty-num');
+    let qty = parseInt(qtyEl.textContent) + delta;
+    if (qty < 1) qty = 1;
+    qtyEl.textContent = qty;
+    updateEndPreview();
+  }
+
+  function getPayments() {
+    return [...document.querySelectorAll('.payment-card')].map(card => {
+      const inputs = card.querySelectorAll('input');
+      const name = inputs[0].value.trim();
+      const method = inputs[1].value.trim();
+      const amount = parseInt(inputs[2].value) || 0;
+      const qty = parseInt(card.querySelector('.qty-num').textContent) || 1;
+      return { name, method, amount, qty };
+    }).filter(p => p.amount > 0);
+  }
+
+  function formatNum(n) {
+    return n.toLocaleString('ko-KR');
+  }
+
+  let noSales = false;
+
+  function toggleNoSales() {
+    noSales = !noSales;
+    const btn = document.getElementById('no-sales-btn');
+    const addBtn = document.getElementById('add-payment-btn');
+    const list = document.getElementById('payment-list');
+    if (noSales) {
+      btn.style.background = 'var(--accent)';
+      btn.style.color = 'white';
+      btn.style.borderColor = 'var(--accent)';
+      addBtn.style.display = 'none';
+      list.style.opacity = '0.3';
+      list.style.pointerEvents = 'none';
+    } else {
+      btn.style.background = 'var(--surface)';
+      btn.style.color = 'var(--sub)';
+      btn.style.borderColor = 'var(--border)';
+      addBtn.style.display = 'block';
+      list.style.opacity = '1';
+      list.style.pointerEvents = 'auto';
+    }
+    updateEndPreview();
+  }
+
+  function updateEndPreview() {
+    const payments = noSales ? [] : getPayments();
+    const groupPreview = document.getElementById('end-preview-group');
+    const infoPreview = document.getElementById('end-preview-info');
+    const cleaningMent = document.getElementById('cleaning-ment').value.trim();
+
+    if (noSales) {
+      const groupText = (cleaningMent ? cleaningMent + '\n\n' : '') + '*매출 없습니다.\n\n퇴근해보겠습니다.';
+      const infoText = '퇴근해보겠습니다.\n*매출 없습니다.';
+      groupPreview.textContent = groupText;
+      infoPreview.textContent = infoText;
+      return;
+    }
+
+    if (payments.length === 0) {
+      groupPreview.innerHTML = '<span class="preview-empty">결제 내역을 추가하면 멘트가 생성됩니다.</span>';
+      infoPreview.innerHTML = '<span class="preview-empty">결제 내역을 추가하면 멘트가 생성됩니다.</span>';
+      return;
+    }
+
+    const total = payments.reduce((sum, p) => sum + p.amount * p.qty, 0);
+
+    const buildMentInfo = () => {
+      let text = '퇴근해보겠습니다.\n';
+      if (payments.length === 1) {
+        const p = payments[0];
+        let detail = '';
+        if (p.name) detail += p.name;
+        if (p.method) detail += (detail ? '/' : '') + p.method;
+        if (p.qty > 1) detail += ' ' + p.qty + '건';
+        text += '*매출 ' + formatNum(total) + '원';
+        if (detail) text += '(' + detail + ')';
+        text += ' 있습니다.';
+      } else {
+        text += '*매출 ' + formatNum(total) + '원\n';
+        payments.forEach(p => {
+          let detail = '';
+          if (p.name) detail += p.name;
+          if (p.method) detail += (detail ? '/' : '') + p.method;
+          const lineAmt = p.amount * p.qty;
+          let suffix = '(' + formatNum(lineAmt) + ')';
+          if (p.qty > 1) suffix = '(' + formatNum(p.amount) + ' × ' + p.qty + '건 = ' + formatNum(lineAmt) + ')';
+          text += '- ' + (detail || '결제') + suffix + '\n';
+        });
+        text = text.trimEnd() + '\n있습니다.';
+      }
+      return text;
+    };
+
+    const buildMentGroup = () => {
+      let text = cleaningMent ? cleaningMent + '\n\n' : '';
+      text += '*매출: ' + formatNum(total) + '원';
+      text += '\n\n퇴근해보겠습니다.';
+      return text;
+    };
+
+    groupPreview.textContent = buildMentGroup();
+    infoPreview.textContent = buildMentInfo();
+  }
+
+  function resetEnd() {
+    noSales = false;
+    const btn = document.getElementById('no-sales-btn');
+    btn.style.background = 'var(--surface)';
+    btn.style.color = 'var(--sub)';
+    btn.style.borderColor = 'var(--border)';
+    document.getElementById('add-payment-btn').style.display = 'block';
+    document.getElementById('payment-list').style.opacity = '1';
+    document.getElementById('payment-list').style.pointerEvents = 'auto';
+    document.getElementById('payment-list').innerHTML = '';
+    document.getElementById('cleaning-ment').value = '5층 청소, 4층 남녀 탈의실 및 샤워실 전체 청소, 각 탈의실 쓰레기통 교체 완료하였습니다.';
+    updateEndPreview();
+  }
+
+  function copyText(previewId, btnId) {
+    const el = document.getElementById(previewId);
+    const text = el.textContent;
+    if (!text || el.querySelector('.preview-empty')) return;
+
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById(btnId);
+      const orig = btn.textContent;
+      btn.textContent = '✅ 복사됐어요!';
+      btn.classList.add('done');
+      setTimeout(() => {
+        btn.textContent = orig;
+        btn.classList.remove('done');
+      }, 2000);
+    });
+  }
+
+  function resetMiddle() {
+    document.querySelectorAll('#middle-checklist .check-item').forEach(i => i.classList.remove('checked'));
+    updateMiddlePreview();
+  }
+</script>
+</body>
+</html>
