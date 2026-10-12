@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>우리집 돈 정리</title>
+<style>
+  :root {
+    --bg: #f7f8fa;
+    --surface: #ffffff;
+    --border: #e4e7ec;
+    --text: #1a1d23;
+    --sub: #6b7280;
+    --accent: #3b5bdb;
+    --accent-light: #eef2ff;
+    --success: #2f9e44;
+    --success-light: #ebfbee;
+    --warn: #e8590c;
+    --radius: 12px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.6;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: calc(14px + env(safe-area-inset-top, 0px)) 16px 14px;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+
+  .header-inner { max-width: 480px; margin: 0 auto; }
+
+  .header-title { font-size: 18px; font-weight: 700; }
+
+  .header-sub { font-size: 13px; color: var(--sub); margin-top: 2px; }
+
+  main { padding: 18px 16px 32px; max-width: 480px; margin: 0 auto; }
+
+  .guide {
+    background: var(--accent-light);
+    color: #2c3e9e;
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    font-size: 14px;
+    margin-bottom: 20px;
+  }
+
+  .guide b { font-weight: 700; }
+
+  .section { margin-bottom: 22px; }
+
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    gap: 8px;
+  }
+
+  .section-title { font-size: 16px; font-weight: 700; }
+
+  .section-total { font-size: 14px; font-weight: 700; color: var(--accent); white-space: nowrap; }
+
+  .section-hint { font-size: 13px; color: var(--sub); margin: -4px 0 8px; }
+
+  /* 이름 선택 */
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  .chip {
+    flex: 1 1 0;
+    min-width: 64px;
+    padding: 12px 0;
+    border-radius: 999px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+    cursor: pointer;
+    font-family: inherit;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  .need-name .chip { border-color: var(--warn); }
+
+  .month-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+    font-size: 15px;
+    color: var(--sub);
+  }
+
+  .month-row select {
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 700;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+  }
+
+  /* 항목 카드 */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 10px 10px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .row:last-child { border-bottom: none; }
+
+  .row-label { flex: 1; min-width: 0; font-size: 15px; word-break: keep-all; }
+
+  .money-wrap {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 8px;
+  }
+
+  .money-wrap:focus-within, .day-wrap:focus-within { border-color: var(--accent); background: var(--surface); }
+
+  .money {
+    width: 104px;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 17px;
+    font-weight: 700;
+    text-align: right;
+    font-family: inherit;
+    color: var(--text);
+  }
+
+  .unit { font-size: 13px; color: var(--sub); }
+
+  .day-wrap {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 6px;
+  }
+
+  .day {
+    width: 30px;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 15px;
+    text-align: right;
+    font-family: inherit;
+    color: var(--text);
+  }
+
+  .del-btn {
+    width: 26px;
+    height: 26px;
+    border: none;
+    background: transparent;
+    color: #c4c9d1;
+    font-size: 18px;
+    cursor: pointer;
+    border-radius: 6px;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+
+  .del-btn:active { color: #ef4444; background: #fef2f2; }
+
+  .add-wrap { display: flex; gap: 8px; margin-top: 8px; }
+
+  .add-input {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 12px;
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+    font-size: 15px;
+    font-family: inherit;
+    background: var(--surface);
+    outline: none;
+    color: var(--text);
+  }
+
+  .add-input:focus { border-color: var(--accent); border-style: solid; }
+
+  .add-btn {
+    padding: 10px 14px;
+    background: var(--accent-light);
+    color: var(--accent);
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    white-space: nowrap;
+  }
+
+  .extra {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 8px;
+    padding: 10px 10px 10px 14px;
+    background: var(--surface);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+    font-size: 14px;
+    color: var(--sub);
+  }
+
+  textarea.memo {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 15px;
+    font-family: inherit;
+    background: var(--surface);
+    color: var(--text);
+    outline: none;
+    resize: vertical;
+    line-height: 1.6;
+  }
+
+  textarea.memo:focus { border-color: var(--accent); }
+
+  /* 요약 */
+  .summary {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .sum-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 8px;
+    text-align: center;
+  }
+
+  .sum-label { font-size: 12px; color: var(--sub); }
+
+  .sum-val { font-size: 15px; font-weight: 700; word-break: break-all; }
+
+  .sum-val.minus { color: #e03131; }
+
+  .divider { height: 1px; background: var(--border); margin: 26px 0 22px; }
+
+  .preview-box {
+    background: #f0f2f5;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    font-size: 14px;
+    line-height: 1.75;
+    white-space: pre-wrap;
+    word-break: break-all;
+    min-height: 80px;
+  }
+
+  .preview-empty { color: var(--sub); }
+
+  .btn {
+    display: block;
+    width: 100%;
+    padding: 15px;
+    border-radius: var(--radius);
+    border: none;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    margin-top: 8px;
+  }
+
+  .btn.primary { background: var(--accent); color: #fff; }
+  .btn.primary:active { background: #2f4dbf; }
+  .btn.secondary { background: var(--surface); color: var(--accent); border: 1.5px solid var(--accent); }
+  .btn.done { background: var(--success-light); color: var(--success); border: 1.5px solid var(--success); }
+
+  .reset-btn {
+    display: block;
+    width: 100%;
+    margin-top: 14px;
+    padding: 10px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--sub);
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .foot { font-size: 12px; color: var(--sub); text-align: center; margin-top: 18px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="header-title">우리집 돈 정리</div>
+    <div class="header-sub">한 달에 들어오고 나가는 돈 적기</div>
+  </div>
+</header>
+
+<main>
+
+  <div class="guide">
+    숫자만 넣으면 맨 아래에 <b>카톡 메시지가 자동으로</b> 만들어져요.<br>
+    다 쓰면 <b>[복사하기]</b> 누르고 <b>나래 개인톡</b>에 붙여넣어 주세요.<br>
+    모르는 칸은 비워두면 돼요. 대략적인 금액도 괜찮아요.
+  </div>
+
+  <!-- 이름 -->
+  <div class="section" id="name-section">
+    <div class="section-head"><div class="section-title">누가 쓰나요?</div></div>
+    <div class="chips" id="chips"></div>
+    <div class="month-row">
+      <span>기준</span>
+      <select id="month"></select>
+    </div>
+  </div>
+
+  <div id="groups"></div>
+
+  <!-- 메모 -->
+  <div class="section">
+    <div class="section-head"><div class="section-title">💬 하고 싶은 말 (선택)</div></div>
+    <textarea class="memo" id="memo" rows="3" placeholder="예: 보험은 내년 3월에 끝나요"></textarea>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- 결과 -->
+  <div class="section">
+    <div class="section-head"><div class="section-title">한눈에 보기</div></div>
+    <div class="summary">
+      <div class="sum-box"><div class="sum-label">들어오는 돈</div><div class="sum-val" id="s-in">0원</div></div>
+      <div class="sum-box"><div class="sum-label">나가는 돈</div><div class="sum-val" id="s-out">0원</div></div>
+      <div class="sum-box"><div class="sum-label">남는 돈</div><div class="sum-val" id="s-left">0원</div></div>
+    </div>
+
+    <div class="section-head" style="margin-top:16px"><div class="section-title">카톡 메시지 미리보기</div></div>
+    <div class="preview-box" id="preview"><span class="preview-empty">이름을 고르고 금액을 넣으면 여기에 메시지가 만들어져요.</span></div>
+
+    <button class="btn primary" id="copy-btn">복사하기</button>
+    <button class="btn secondary" id="share-btn" style="display:none">카톡으로 보내기 (공유)</button>
+    <button class="reset-btn" id="reset-btn">↺ 처음부터 다시 쓰기</button>
+  </div>
+
+  <div class="foot">입력한 내용은 이 폰에만 임시로 남고, 어디에도 전송되지 않아요.</div>
+
+</main>
+
+<script>
+(function () {
+  const NAMES = ['엄마', '아빠', '해솔', '현이'];
+  const STORE_KEY = 'family-money-v1';
+
+  // kind: income(받는 날) / fixed / house(납부일) / shared
+  const GROUPS = [
+    { id: 'income', icon: '💰', title: '내 월 수입', sumLabel: '수입 합계',
+      hint: '세금 떼고 실제로 통장에 들어오는 돈', day: '받는 날',
+      items: ['급여', '알바', '연금', '용돈·지원', '기타 수입'] },
+    { id: 'fixed', icon: '📌', title: '내 개인 고정지출', sumLabel: '개인 고정지출',
+      hint: '매달 내 이름으로 나가는 돈', day: null,
+      items: ['통신비', '보험', '교통비', '대출 상환', '카드 할부', '구독료', '기타'] },
+    { id: 'house', icon: '🏠', title: '내가 내는 집 고정비', sumLabel: '내가 내는 집 고정비',
+      hint: '우리 집 비용 중 지금 내가 내고 있는 것만', day: '납부일',
+      items: ['관리비', '전기', '가스', '수도', '인터넷·TV', '집 대출이자·월세', '정수기·렌탈', '기타'] },
+    { id: 'shared', icon: '🐱', title: '내가 사는 공동 생활비', sumLabel: '내가 사는 공동 생활비',
+      hint: '한 달 평균 대략 얼마 쓰는지', day: null,
+      items: ['고양이 사료', '고양이 모래', '고양이 간식·용품', '고양이 병원비', '생필품 (휴지·세제 등)', '장보기·식재료'] },
+  ];
+
+  const state = load() || freshState();
+
+  function freshState() {
+    const s = { name: '', month: new Date().getMonth() + 1, memo: '', debt: '', groups: {} };
+    GROUPS.forEach(g => { s.groups[g.id] = g.items.map(label => ({ label, amt: '', day: '' })); });
+    return s;
+  }
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORE_KEY);
+      if (!raw) return null;
+      const s = JSON.parse(raw);
+      if (!s || !s.groups) return null;
+      GROUPS.forEach(g => { if (!Array.isArray(s.groups[g.id])) s.groups[g.id] = g.items.map(label => ({ label, amt: '', day: '' })); });
+      return s;
+    } catch (e) { return null; }
+  }
+
+  function save() {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) {}
+  }
+
+  const num = v => parseInt(String(v || '').replace(/[^0-9]/g, ''), 10) || 0;
+  const fmt = n => n.toLocaleString('ko-KR');
+  const won = n => fmt(n) + '원';
+
+  function el(tag, cls, text) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+
+  /* ---------- 이름·월 ---------- */
+  const chipsEl = document.getElementById('chips');
+  NAMES.forEach(n => {
+    const b = el('button', 'chip', n);
+    b.type = 'button';
+    b.addEventListener('click', () => {
+      state.name = state.name === n ? '' : n;
+      renderChips(); update();
+    });
+    chipsEl.appendChild(b);
+  });
+
+  function renderChips() {
+    [...chipsEl.children].forEach(b => b.classList.toggle('active', b.textContent === state.name));
+    document.getElementById('name-section').classList.remove('need-name');
+  }
+
+  const monthEl = document.getElementById('month');
+  for (let m = 1; m <= 12; m++) {
+    const o = el('option', null, m + '월');
+    o.value = m;
+    monthEl.appendChild(o);
+  }
+  monthEl.value = state.month;
+  monthEl.addEventListener('change', () => { state.month = +monthEl.value; update(); });
+
+  /* ---------- 항목 그룹 ---------- */
+  const groupsEl = document.getElementById('groups');
+
+  function renderGroups() {
+    groupsEl.innerHTML = '';
+    GROUPS.forEach(g => {
+      const sec = el('div', 'section');
+      const head = el('div', 'section-head');
+      head.appendChild(el('div', 'section-title', g.icon + ' ' + g.title));
+      const tot = el('div', 'section-total', '0원');
+      tot.id = 'tot-' + g.id;
+      head.appendChild(tot);
+      sec.appendChild(head);
+      sec.appendChild(el('div', 'section-hint', g.hint + (g.day ? ' · ' + g.day + '은 선택' : '')));
+
+      const card = el('div', 'card');
+      state.groups[g.id].forEach((item, idx) => card.appendChild(buildRow(g, item, idx)));
+      sec.appendChild(card);
+
+      const addWrap = el('div', 'add-wrap');
+      const addInput = el('input', 'add-input');
+      addInput.type = 'text';
+      addInput.placeholder = '항목 추가 (예: 적금)';
+      const addBtn = el('button', 'add-btn', '+ 추가');
+      addBtn.type = 'button';
+      const doAdd = () => {
+        const label = addInput.value.trim();
+        if (!label) return;
+        state.groups[g.id].push({ label, amt: '', day: '' });
+        renderGroups(); update();
+        const rows = groupsEl.querySelectorAll('[data-group="' + g.id + '"] .money');
+        if (rows.length) rows[rows.length - 1].focus();
+      };
+      addBtn.addEventListener('click', doAdd);
+      addInput.addEventListener('keydown', e => { if (e.key === 'Enter') doAdd(); });
+      addWrap.appendChild(addInput);
+      addWrap.appendChild(addBtn);
+      sec.appendChild(addWrap);
+
+      if (g.id === 'fixed') {
+        const ex = el('div', 'extra');
+        ex.appendChild(el('span', null, '대출 남은 금액 (선택)'));
+        const mw = el('div', 'money-wrap');
+        const mi = moneyInput(state.debt, v => { state.debt = v; update(); });
+        mw.appendChild(mi); mw.appendChild(el('span', 'unit', '원'));
+        ex.appendChild(mw);
+        sec.appendChild(ex);
+      }
+
+      groupsEl.appendChild(sec);
+    });
+  }
+
+  function moneyInput(value, onChange) {
+    const i = el('input', 'money');
+    i.type = 'text';
+    i.inputMode = 'numeric';
+    i.placeholder = '0';
+    i.value = num(value) ? fmt(num(value)) : '';
+    i.addEventListener('input', () => {
+      const n = num(i.value);
+      i.value = n ? fmt(n) : '';
+      onChange(n ? String(n) : '');
+    });
+    return i;
+  }
+
+  function buildRow(g, item, idx) {
+    const row = el('div', 'row');
+    row.dataset.group = g.id;
+    row.appendChild(el('div', 'row-label', item.label));
+
+    const mw = el('div', 'money-wrap');
+    mw.appendChild(moneyInput(item.amt, v => { item.amt = v; update(); }));
+    mw.appendChild(el('span', 'unit', '원'));
+    row.appendChild(mw);
+
+    if (g.day) {
+      const dw = el('div', 'day-wrap');
+      const d = el('input', 'day');
+      d.type = 'text';
+      d.inputMode = 'numeric';
+      d.placeholder = '--';
+      d.maxLength = 2;
+      d.value = item.day || '';
+      d.setAttribute('aria-label', g.day);
+      d.addEventListener('input', () => {
+        d.value = d.value.replace(/[^0-9]/g, '').slice(0, 2);
+        item.day = d.value;
+        update();
+      });
+      dw.appendChild(d);
+      dw.appendChild(el('span', 'unit', '일'));
+      row.appendChild(dw);
+    }
+
+    const del = el('button', 'del-btn', '×');
+    del.type = 'button';
+    del.setAttribute('aria-label', item.label + ' 지우기');
+    del.addEventListener('click', () => {
+      state.groups[g.id].splice(idx, 1);
+      renderGroups(); update();
+    });
+    row.appendChild(del);
+    return row;
+  }
+
+  /* ---------- 계산·메시지 ---------- */
+  const memoEl = document.getElementById('memo');
+  memoEl.value = state.memo || '';
+  memoEl.addEventListener('input', () => { state.memo = memoEl.value; update(); });
+
+  function totals() {
+    const t = {};
+    GROUPS.forEach(g => { t[g.id] = state.groups[g.id].reduce((s, i) => s + num(i.amt), 0); });
+    return t;
+  }
+
+  function buildMessage(t) {
+    const out = t.fixed + t.house + t.shared;
+    const left = t.income - out;
+    const lines = [];
+    lines.push('[' + (state.name || '이름') + '] ' + state.month + '월 우리집 돈 정리');
+    lines.push('');
+    GROUPS.forEach(g => lines.push(g.icon + ' ' + g.sumLabel + ' ' + won(t[g.id])));
+    lines.push('➡️ 남는 돈 ' + (left < 0 ? '-' : '') + won(Math.abs(left)));
+    lines.push('');
+    lines.push('━━━━━━━━━━');
+    lines.push('[상세]');
+
+    GROUPS.forEach(g => {
+      lines.push('');
+      lines.push(g.icon + ' ' + g.title.replace('내 ', ''));
+      const filled = state.groups[g.id].filter(i => num(i.amt) > 0);
+      if (!filled.length) { lines.push('- 없음'); }
+      filled.forEach(i => {
+        let s = '- ' + i.label + ' ' + won(num(i.amt));
+        if (g.day && i.day) s += ' (' + (g.id === 'income' ? '매월 ' + i.day + '일' : i.day + '일 납부') + ')';
+        lines.push(s);
+      });
+      if (g.id === 'fixed' && num(state.debt) > 0) lines.push('- 대출 남은 금액 ' + won(num(state.debt)));
+    });
+
+    const memo = (state.memo || '').trim();
+    if (memo) { lines.push(''); lines.push('💬 ' + memo); }
+    return lines.join('\n');
+  }
+
+  function hasAnyInput(t) {
+    return Object.values(t).some(v => v > 0) || (state.memo || '').trim() || num(state.debt) > 0;
+  }
+
+  const previewEl = document.getElementById('preview');
+
+  function update() {
+    const t = totals();
+    GROUPS.forEach(g => { const e = document.getElementById('tot-' + g.id); if (e) e.textContent = won(t[g.id]); });
+    const out = t.fixed + t.house + t.shared;
+    const left = t.income - out;
+    document.getElementById('s-in').textContent = won(t.income);
+    document.getElementById('s-out').textContent = won(out);
+    const sl = document.getElementById('s-left');
+    sl.textContent = (left < 0 ? '-' : '') + won(Math.abs(left));
+    sl.classList.toggle('minus', left < 0);
+
+    if (!hasAnyInput(t)) {
+      previewEl.innerHTML = '';
+      previewEl.appendChild(el('span', 'preview-empty', '이름을 고르고 금액을 넣으면 여기에 메시지가 만들어져요.'));
+    } else {
+      previewEl.textContent = buildMessage(t);
+    }
+    save();
+  }
+
+  /* ---------- 복사·공유 ---------- */
+  function currentText() {
+    const t = totals();
+    return hasAnyInput(t) ? buildMessage(t) : '';
+  }
+
+  function needName() {
+    if (state.name) return false;
+    const sec = document.getElementById('name-section');
+    sec.classList.add('need-name');
+    sec.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return true;
+  }
+
+  function fallbackCopy(text) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    ta.setSelectionRange(0, text.length);
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+    return ok;
+  }
+
+  function flash(btn, msg) {
+    const orig = btn.dataset.orig || btn.textContent;
+    btn.dataset.orig = orig;
+    btn.textContent = msg;
+    btn.classList.add('done');
+    setTimeout(() => { btn.textContent = orig; btn.classList.remove('done'); }, 2000);
+  }
+
+  const copyBtn = document.getElementById('copy-btn');
+  copyBtn.addEventListener('click', () => {
+    const text = currentText();
+    if (!text) return;
+    if (needName()) return;
+    const done = () => flash(copyBtn, '✅ 복사됐어요! 카톡에 붙여넣기 하세요');
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(done).catch(() => { if (fallbackCopy(text)) done(); });
+    } else if (fallbackCopy(text)) {
+      done();
+    }
+  });
+
+  const shareBtn = document.getElementById('share-btn');
+  if (navigator.share) {
+    shareBtn.style.display = 'block';
+    shareBtn.addEventListener('click', () => {
+      const text = currentText();
+      if (!text) return;
+      if (needName()) return;
+      navigator.share({ text }).catch(() => {});
+    });
+  }
+
+  document.getElementById('reset-btn').addEventListener('click', () => {
+    if (!confirm('입력한 내용을 모두 지울까요?')) return;
+    const f = freshState();
+    Object.keys(state).forEach(k => delete state[k]);
+    Object.assign(state, f);
+    monthEl.value = state.month;
+    memoEl.value = '';
+    renderChips(); renderGroups(); update();
+  });
+
+  renderChips();
+  renderGroups();
+  update();
+})();
+</script>
+</body>
+</html>
